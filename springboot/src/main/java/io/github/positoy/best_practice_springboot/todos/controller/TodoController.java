@@ -48,13 +48,19 @@ public class TodoController {
 
 	@PutMapping("/{id}")
 	public Response updateTodo(@PathVariable Long id, @RequestBody UpdateRequest request) {
-		Todo todo = new Todo(id, request.text(), request.completed());
-		Todo saved = todoRepository.save(todo);
-		return new Response(saved.id(), saved.text(), saved.completed());
+		Todo found = todoRepository.findById(id).orElseThrow();
+		Todo toUpdate = found.toBuilder()
+			.text(request.text())
+			.completed(request.completed())
+			.build();
+		Todo saved = todoRepository.save(toUpdate);
+		return new Response(toUpdate.id(), saved.text(), saved.completed());
 	}
 
 	@DeleteMapping("/{id}")
-	public void deleteTodo(@PathVariable Long id) {
+	public Response deleteTodo(@PathVariable Long id) {
+		Todo found = todoRepository.findById(id).orElseThrow();
 		todoRepository.deleteById(id);
+		return new Response(found.id(), found.text(), found.completed());
 	}
 }
