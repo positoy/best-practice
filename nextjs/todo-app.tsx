@@ -1,53 +1,71 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Trash2, Plus } from "lucide-react"
-
-interface Todo {
-  id: number
-  text: string
-  completed: boolean
-}
+import { useEffect, useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Trash2, Plus } from "lucide-react";
+import todoService from "@/lib/services/todoService";
+import { Todo } from "@/lib/models/todo";
 
 export default function TodoApp() {
-  const [todos, setTodos] = useState<Todo[]>([])
-  const [newTodo, setNewTodo] = useState("")
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [newTodo, setNewTodo] = useState("");
+
+  useEffect(() => {
+    todoService.getTodos().then(setTodos);
+  }, []);
 
   const addTodo = () => {
     if (newTodo.trim() !== "") {
-      setTodos([
-        ...todos,
-        {
-          id: Date.now(),
+      todoService
+        .createTodo({
           text: newTodo.trim(),
           completed: false,
-        },
-      ])
-      setNewTodo("")
+        })
+        .then((todo) => {
+          setTodos([...todos, todo]);
+          setNewTodo("");
+        });
     }
-  }
+  };
 
   const toggleTodo = (id: number) => {
-    setTodos(todos.map((todo) => (todo.id === id ? { ...todo, completed: !todo.completed } : todo)))
-  }
+    const todo = todos.find((todo) => todo.id === id);
+    if (!todo) return;
+    todoService
+      .updateTodo(id, {
+        completed: !todo.completed,
+        text: todo.text,
+      })
+      .then((updated) => {
+        setTodos(todos.map((todo) => (todo.id === id ? updated : todo)));
+      });
+  };
 
   const deleteTodo = (id: number) => {
-    setTodos(todos.filter((todo) => todo.id !== id))
-  }
+    todoService
+      .deleteTodo(id)
+      .then((todo) => {
+        setTodos(todos.filter((todo) => todo.id !== id));
+      })
+      .catch((error) => {
+        console.error("Error deleting todo:", error);
+      });
+  };
 
-  const completedCount = todos.filter((todo) => todo.completed).length
-  const totalCount = todos.length
+  const completedCount = todos.filter((todo) => todo.completed).length;
+  const totalCount = todos.length;
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-md mx-auto">
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl font-bold text-center">Todo List</CardTitle>
+            <CardTitle className="text-2xl font-bold text-center">
+              Todo List
+            </CardTitle>
             <div className="text-sm text-muted-foreground text-center">
               {completedCount} of {totalCount} tasks completed
             </div>
@@ -62,7 +80,7 @@ export default function TodoApp() {
                 onChange={(e) => setNewTodo(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
-                    addTodo()
+                    addTodo();
                   }
                 }}
                 className="flex-1"
@@ -76,13 +94,17 @@ export default function TodoApp() {
             {/* Todo list */}
             <div className="space-y-2">
               {todos.length === 0 ? (
-                <div className="text-center text-muted-foreground py-8">No tasks yet. Add one above!</div>
+                <div className="text-center text-muted-foreground py-8">
+                  No tasks yet. Add one above!
+                </div>
               ) : (
                 todos.map((todo) => (
                   <div
                     key={todo.id}
                     className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
-                      todo.completed ? "bg-muted/50 border-muted" : "bg-background border-border hover:shadow-sm"
+                      todo.completed
+                        ? "bg-muted/50 border-muted"
+                        : "bg-background border-border hover:shadow-sm"
                     }`}
                   >
                     <Checkbox
@@ -93,7 +115,9 @@ export default function TodoApp() {
                     <label
                       htmlFor={`todo-${todo.id}`}
                       className={`flex-1 cursor-pointer ${
-                        todo.completed ? "line-through text-muted-foreground" : "text-foreground"
+                        todo.completed
+                          ? "line-through text-muted-foreground"
+                          : "text-foreground"
                       }`}
                     >
                       {todo.text}
@@ -126,5 +150,5 @@ export default function TodoApp() {
         </Card>
       </div>
     </div>
-  )
+  );
 }
