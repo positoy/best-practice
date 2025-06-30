@@ -1,0 +1,5 @@
+CREATE TABLE "todos" (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    text VARCHAR(255) NOT NULL,
+    completed BOOLEAN NOT NULL
+);

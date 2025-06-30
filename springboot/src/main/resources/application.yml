@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: best-practice-springboot
+  profiles:
+    active: h2
