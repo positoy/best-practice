@@ -29,21 +29,21 @@ public class TodoController {
 	@GetMapping
 	public List<Response> getAllTodos() {
 		return StreamSupport.stream(todoRepository.findAll().spliterator(), false)
-			.map(todo -> new Response(todo.id(), todo.text(), todo.completed()))
+			.map(Response::of)
 			.toList();
 	}
 
 	@GetMapping("/{id}")
 	public Response getTodoById(@PathVariable Long id) {
 		Todo todo = todoRepository.findById(id).orElseThrow();
-		return new Response(todo.id(), todo.text(), todo.completed());
+		return Response.of(todo);
 	}
 
 	@PostMapping
 	public Response createTodo(@RequestBody CreateRequest request) {
 		Todo todo = new Todo(null, request.text(), false);
 		Todo saved = todoRepository.save(todo);
-		return new Response(saved.id(), saved.text(), saved.completed());
+		return Response.of(saved);
 	}
 
 	@PutMapping("/{id}")
@@ -54,13 +54,13 @@ public class TodoController {
 			.completed(request.completed())
 			.build();
 		Todo saved = todoRepository.save(toUpdate);
-		return new Response(toUpdate.id(), saved.text(), saved.completed());
+		return Response.of(saved);
 	}
 
 	@DeleteMapping("/{id}")
 	public Response deleteTodo(@PathVariable Long id) {
 		Todo found = todoRepository.findById(id).orElseThrow();
 		todoRepository.deleteById(id);
-		return new Response(found.id(), found.text(), found.completed());
+		return Response.of(found);
 	}
 }
